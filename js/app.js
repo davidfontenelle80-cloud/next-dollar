@@ -927,3 +927,13 @@ function esc(s){ return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;")
   state.debts=[newDebt()];
   goTo(0);
 })();
+
+window.addEventListener('error',function(e){
+  console.error('[NextDollar] Uncaught:',e.error||e.message);
+  var eb=document.getElementById('error-boundary');
+  var em=document.getElementById('error-message');
+  if(eb&&em){em.textContent=e.message||'An unexpected error occurred.';eb.hidden=false;}
+});
+window.addEventListener('unhandledrejection',function(e){
+  console.error('[NextDollar] Rejection:',e.reason);
+});
