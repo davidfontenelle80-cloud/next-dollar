@@ -18,7 +18,7 @@
  * BUMP THIS VERSION STRING on every deploy that changes HTML, CSS, JS, manifest, or SW behavior.
  */
 
-const CACHE_VERSION = 'next-dollar-v3-shortcut-refresh';
+const CACHE_VERSION = 'next-dollar-v4-style-refresh';
 
 /**
  * All URLs that make up the app shell.
