@@ -356,7 +356,9 @@ function cycleTheme(){ theme=TCYCLE[(TCYCLE.indexOf(theme)+1)%TCYCLE.length]; ap
 // ── Navigation ───────────────────────────────────────────────────
 var SCREENS = ["welcome","s1","s2","s3","s4","s5","s6","results"];
 
-function goTo(n){`n  persistState();`n  document.querySelectorAll(".screen").forEach(function(s){s.classList.remove("active");});
+function goTo(n){
+  persistState();
+  document.querySelectorAll(".screen").forEach(function(s){s.classList.remove("active");});
   document.getElementById("screen-"+SCREENS[n]).classList.add("active");
   state.step = n;
   updateProgress(n);
@@ -386,7 +388,9 @@ function switchTab(tab){
   });
 }
 
-function restart(){`n  localStorage.removeItem(NEXT_DOLLAR_STORAGE_KEY);`n  state = {takeHome:0,payFreq:"biweekly",housing:0,food:0,transport:0,utilities:0,funspend:0,
+function restart(){
+  localStorage.removeItem(NEXT_DOLLAR_STORAGE_KEY);
+  state = {takeHome:0,payFreq:"biweekly",housing:0,food:0,transport:0,utilities:0,funspend:0,
     debts:[],cash:0,efund:0,retirement:0,brokerage:0,hasMatch:false,matchPct:100,matchUpto:4,
     myContrib:0,hasRoth:false,retireAge:55,targetSpend:60000,personality:null,step:0};
   document.querySelectorAll("input[type=number]").forEach(function(i){i.value="";});
@@ -967,7 +971,9 @@ function initTilt(){
 }
 
 // ── Export / Import ──────────────────────────────────────────────
-function exportPlan(){`n  persistState();`n  var payload={app:"next-dollar",version:"2.0",exported:new Date().toISOString(),lang:lang,state:state};
+function exportPlan(){
+  persistState();
+  var payload={app:"next-dollar",version:"2.0",exported:new Date().toISOString(),lang:lang,state:state};
   var blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
   var url=URL.createObjectURL(blob);
   var a=document.createElement("a");
@@ -1028,10 +1034,15 @@ function esc(s){ return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;")
   metaTheme.name="theme-color";metaTheme.content="#06091A";
   document.head.appendChild(metaTheme);
 
-  loadPersistedPlan();`n  applyTheme();`n  applyStrings();
+  loadPersistedPlan();
+  applyTheme();
+  applyStrings();
   // Init empty debt row
   state.debts=[newDebt()];
-  applyStateToInputs();`n  setupCloudSync();`n  goTo(state.step || 0);`n})();
+  applyStateToInputs();
+  setupCloudSync();
+  goTo(state.step || 0);
+})();
 
 window.addEventListener('error',function(e){
   console.error('[NextDollar] Uncaught:',e.error||e.message);
