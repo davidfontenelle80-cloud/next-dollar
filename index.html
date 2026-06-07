@@ -96,6 +96,17 @@
   </div>
   <button class="btn btn-primary" id="btn-start" onclick="goTo(1)"></button>
   <div style="text-align:center"><label class="import-link" id="lbl-import" for="importFile"></label><input type="file" id="importFile" accept=".json" style="display:none" onchange="importPlan(event)"></div>
+  <div class="card">
+    <h3 style="margin-bottom:10px">Backup & restore</h3>
+    <div class="actions-row">
+      <button class="btn-action" type="button" onclick="exportPlan()">&#8681; Export JSON</button>
+      <button class="btn-action" type="button" onclick="importPlanFromFile()">&#8679; Import file</button>
+    </div>
+    <div class="actions-row" style="margin-top:8px">
+      <button class="btn-action" type="button" onclick="nextDollarCloudSaveButton()">&#9729; Cloud Save</button>
+      <button class="btn-action" type="button" onclick="nextDollarCloudRestoreButton()">&#9729; Cloud Restore</button>
+    </div>
+  </div>
   <p class="disclaimer" id="lbl-noacct"></p>
 </div>
 
@@ -252,7 +263,12 @@
   <div style="width:100%;max-width:480px;padding:14px 20px;display:flex;flex-direction:column;gap:10px">
     <div class="actions-row">
       <button class="btn-action" onclick="exportPlan()">&#8681; <span id="lbl-export"></span></button>
+      <button class="btn-action" onclick="importPlanFromFile()">&#8679; Import</button>
       <button class="btn-action" onclick="window.print()">&#128438; <span id="lbl-print"></span></button>
+    </div>
+    <div class="actions-row">
+      <button class="btn-action" onclick="nextDollarCloudSaveButton()">&#9729; Cloud Save</button>
+      <button class="btn-action" onclick="nextDollarCloudRestoreButton()">&#9729; Cloud Restore</button>
     </div>
     <p class="disclaimer" id="lbl-disc"></p>
     <button class="btn-restart" id="btn-restart" onclick="restart()"></button>
