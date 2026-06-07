@@ -237,6 +237,92 @@ function applyStateToInputs(){
   if(state.personality) selectP(state.personality);
 }
 
+function importPlanFromFile(){
+  var fileInput=document.getElementById("importFile");
+  if(fileInput) fileInput.click();
+}
+
+function cloudReady(){
+  return !!(window.KHub && KHub.CloudAuth && KHub.CloudBackup);
+}
+
+function cloudUser(){
+  return cloudReady() ? KHub.CloudAuth.currentUser() : null;
+}
+
+function cloudErrorMessage(e){
+  if(e && e.code==="auth-required") return "Sign in to your cloud account first.";
+  if(e && e.message==="no-backup") return "No cloud backup found.";
+  return "Cloud save failed.";
+}
+
+function ensureCloudAccount(){
+  if(!cloudReady()){
+    alert("Cloud backup is unavailable on this device.");
+    return Promise.resolve(false);
+  }
+  if(cloudUser()) return Promise.resolve(true);
+  return KHub.CloudAuth.openDialog().then(function(result){
+    if(result==="reset-sent"){
+      alert("Password reset email sent.");
+      return false;
+    }
+    return !!KHub.CloudAuth.currentUser();
+  }).catch(function(){ return false; });
+}
+
+function nextDollarCloudSaveButton(){
+  return ensureCloudAccount().then(function(ok){
+    if(!ok) return null;
+    persistState();
+    return KHub.CloudBackup.save("next-dollar", [NEXT_DOLLAR_STORAGE_KEY])
+      .then(function(){ alert("Saved to cloud."); })
+      .catch(function(e){ console.error(e); alert(cloudErrorMessage(e)); });
+  });
+}
+
+function nextDollarCloudRestoreButton(){
+  return ensureCloudAccount().then(function(ok){
+    if(!ok) return null;
+    if(!confirm("Replace this device with your signed-in cloud backup?")) return null;
+    return KHub.CloudBackup.restore("next-dollar", [NEXT_DOLLAR_STORAGE_KEY], null, function(){
+      alert("Restored from cloud.");
+      location.reload();
+    }).catch(function(e){ console.error(e); alert(cloudErrorMessage(e)); });
+  });
+}
+
+function openBackupMenu(){
+  var old=document.getElementById("backupMenuOverlay");
+  if(old) old.remove();
+  var overlay=document.createElement("div");
+  overlay.id="backupMenuOverlay";
+  overlay.style.cssText="position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:20px";
+  overlay.innerHTML='<div class="card" style="width:min(420px,100%);display:flex;flex-direction:column;gap:10px">'+
+    '<div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><h3 style="margin:0">Backup & restore</h3><button class="ctrl-btn" id="backupMenuClose" type="button">X</button></div>'+
+    '<button class="btn-action" id="backupMenuExport" type="button">&#8681; Export JSON</button>'+
+    '<button class="btn-action" id="backupMenuImport" type="button">&#8679; Import file</button>'+
+    '<button class="btn-action" id="backupMenuCloudSave" type="button">&#9729; Cloud Save</button>'+
+    '<button class="btn-action" id="backupMenuCloudRestore" type="button">&#9729; Cloud Restore</button>'+
+    '<button class="btn-action" id="backupMenuAccount" type="button">&#128274; Cloud Account</button>'+
+    '</div>';
+  document.body.appendChild(overlay);
+  overlay.addEventListener("click",function(e){ if(e.target===overlay) overlay.remove(); });
+  document.getElementById("backupMenuClose").onclick=function(){overlay.remove();};
+  document.getElementById("backupMenuExport").onclick=exportPlan;
+  document.getElementById("backupMenuImport").onclick=importPlanFromFile;
+  document.getElementById("backupMenuCloudSave").onclick=nextDollarCloudSaveButton;
+  document.getElementById("backupMenuCloudRestore").onclick=nextDollarCloudRestoreButton;
+  document.getElementById("backupMenuAccount").onclick=function(){
+    if(!cloudReady()){ alert("Cloud backup is unavailable on this device."); return; }
+    if(cloudUser()){
+      if(confirm("Sign out of cloud backup?")) KHub.CloudAuth.signOut();
+      return;
+    }
+    KHub.CloudAuth.openDialog().then(function(result){ if(result==="reset-sent") alert("Password reset email sent."); }).catch(function(){});
+  };
+}
+
 function setupCloudSync(){
   if(!window.KHub || !KHub.CloudAuth || !KHub.CloudBackup) return;
   var controls=document.querySelector(".header-controls");
@@ -248,23 +334,13 @@ function setupCloudSync(){
   btn.className="ctrl-btn";
   btn.id="cloudAccountBtn";
   btn.type="button";
-  btn.title="Cloud backup account";
-  btn.textContent="Cloud";
+  btn.title="Backup and restore";
+  btn.textContent="Backup";
   controls.appendChild(btn);
 
   function user(){return KHub.CloudAuth.currentUser();}
-  function refresh(){btn.textContent=user()?"Cloud OK":"Cloud";}
-  function openAccount(){
-    if(user()){
-      if(confirm("Sign out of cloud backup?")) KHub.CloudAuth.signOut().then(function(){refresh();});
-      return;
-    }
-    KHub.CloudAuth.openDialog().then(function(result){
-      if(result==="reset-sent") alert("Password reset email sent.");
-      refresh();
-    }).catch(function(){});
-  }
-  btn.onclick=openAccount;
+  function refresh(){btn.textContent=user()?"Backup OK":"Backup";}
+  btn.onclick=openBackupMenu;
   refresh();
   KHub.CloudAuth.onChange(function(u){
     refresh();
@@ -274,8 +350,8 @@ function setupCloudSync(){
         if(!autoSaveStarted){ autoSaveStarted=true; KHub.CloudBackup.autoSave(APP_ID, KEYS); }
       });
   });
-  window.nextDollarCloudSave=function(){ persistState(); return KHub.CloudBackup.save(APP_ID, KEYS); };
-  window.nextDollarCloudRestore=function(){ return KHub.CloudBackup.restore(APP_ID, KEYS, null, function(){ location.reload(); }); };
+  window.nextDollarCloudSave=nextDollarCloudSaveButton;
+  window.nextDollarCloudRestore=nextDollarCloudRestoreButton;
 }
 
 document.addEventListener('input', schedulePersist, true);
@@ -1006,6 +1082,7 @@ function importPlan(evt){
         document.getElementById("inp-hasroth").checked=!!state.hasRoth;
         toggleMatchFields();
         applyStrings();
+        persistState();
         goTo(data.state.personality?7:1);
       }
     }catch(err){alert("Could not read that file.");}
@@ -1037,8 +1114,8 @@ function esc(s){ return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;")
   loadPersistedPlan();
   applyTheme();
   applyStrings();
-  // Init empty debt row
-  state.debts=[newDebt()];
+  // Init an empty debt row only for a brand-new plan.
+  if(!Array.isArray(state.debts) || !state.debts.length) state.debts=[newDebt()];
   applyStateToInputs();
   setupCloudSync();
   goTo(state.step || 0);
