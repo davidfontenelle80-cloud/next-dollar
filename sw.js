@@ -18,7 +18,7 @@
  * BUMP THIS VERSION STRING on every deploy that changes HTML, CSS, JS, manifest, or SW behavior.
  */
 
-const CACHE_VERSION = 'next-dollar-v5-centered-layout';
+const CACHE_VERSION = 'next-dollar-v6-auth-cloud-profiles';
 
 /**
  * All URLs that make up the app shell.
@@ -43,6 +43,8 @@ const PRECACHE_URLS = [
   './js/components/input.js',
   './js/perf.js',
   './js/app.js',
+  './js/firebase/firebase-config.js',
+  './js/firebase/cloud-backup.js',
 ];
 
 // ── Install ──────────────────────────────────────────────────
