@@ -171,6 +171,116 @@ var state = {
   personality:null,
   step:0
 };
+var NEXT_DOLLAR_STORAGE_KEY = "next-dollar-v2";
+var nextDollarPersistTimer = null;
+
+function loadPersistedPlan(){
+  try{
+    var raw = localStorage.getItem(NEXT_DOLLAR_STORAGE_KEY);
+    if(!raw) return;
+    var saved = JSON.parse(raw);
+    if(saved && saved.state){ Object.keys(saved.state).forEach(function(k){ state[k]=saved.state[k]; }); }
+    if(saved && saved.lang) lang = saved.lang;
+    if(saved && saved.theme) theme = saved.theme;
+  }catch(e){ console.warn('[NextDollar] saved plan ignored:', e); }
+}
+
+function captureInputsToState(){
+  var inputMap={
+    "takehome":"takeHome","housing":"housing","food":"food","transport":"transport","utilities":"utilities","funspend":"funspend",
+    "cash":"cash","efund":"efund","retirement":"retirement","brokerage":"brokerage","retireage":"retireAge","targetspend":"targetSpend",
+    "matchpct":"matchPct","matchupto":"matchUpto","mycontrib":"myContrib"
+  };
+  Object.keys(inputMap).forEach(function(id){
+    var el=document.getElementById("inp-"+id);
+    if(el && el.value !== "") state[inputMap[id]] = parseFloat(el.value) || 0;
+  });
+  var payFreq=document.getElementById("inp-payfreq");
+  if(payFreq) state.payFreq = payFreq.value;
+  var hasMatch=document.getElementById("inp-hasmatch");
+  if(hasMatch) state.hasMatch = !!hasMatch.checked;
+  var hasRoth=document.getElementById("inp-hasroth");
+  if(hasRoth) state.hasRoth = !!hasRoth.checked;
+}
+
+function persistState(){
+  try{
+    captureInputsToState();
+    state.updatedAt = new Date().toISOString();
+    localStorage.setItem(NEXT_DOLLAR_STORAGE_KEY, JSON.stringify({app:"next-dollar",version:"2.0",updatedAt:state.updatedAt,lang:lang,theme:theme,state:state}));
+  }catch(e){ console.warn('[NextDollar] save failed:', e); }
+}
+
+function schedulePersist(){
+  if(nextDollarPersistTimer) clearTimeout(nextDollarPersistTimer);
+  nextDollarPersistTimer = setTimeout(persistState, 250);
+}
+
+function applyStateToInputs(){
+  var inputMap={
+    "takehome":"takeHome","housing":"housing","food":"food","transport":"transport","utilities":"utilities","funspend":"funspend",
+    "cash":"cash","efund":"efund","retirement":"retirement","brokerage":"brokerage","retireage":"retireAge","targetspend":"targetSpend",
+    "matchpct":"matchPct","matchupto":"matchUpto","mycontrib":"myContrib"
+  };
+  Object.keys(inputMap).forEach(function(id){
+    var el=document.getElementById("inp-"+id);
+    var val=state[inputMap[id]];
+    if(el && val !== undefined && val !== null && val !== 0) el.value = val;
+  });
+  var payFreq=document.getElementById("inp-payfreq");
+  if(payFreq) payFreq.value = state.payFreq || "biweekly";
+  var hasMatch=document.getElementById("inp-hasmatch");
+  if(hasMatch) hasMatch.checked = !!state.hasMatch;
+  var hasRoth=document.getElementById("inp-hasroth");
+  if(hasRoth) hasRoth.checked = !!state.hasRoth;
+  if(typeof toggleMatchFields === "function") toggleMatchFields();
+  if(state.personality) selectP(state.personality);
+}
+
+function setupCloudSync(){
+  if(!window.KHub || !KHub.CloudAuth || !KHub.CloudBackup) return;
+  var controls=document.querySelector(".header-controls");
+  if(!controls || document.getElementById("cloudAccountBtn")) return;
+  var APP_ID="next-dollar";
+  var KEYS=[NEXT_DOLLAR_STORAGE_KEY];
+  var autoSaveStarted=false;
+  var btn=document.createElement("button");
+  btn.className="ctrl-btn";
+  btn.id="cloudAccountBtn";
+  btn.type="button";
+  btn.title="Cloud backup account";
+  btn.textContent="Cloud";
+  controls.appendChild(btn);
+
+  function user(){return KHub.CloudAuth.currentUser();}
+  function refresh(){btn.textContent=user()?"Cloud OK":"Cloud";}
+  function openAccount(){
+    if(user()){
+      if(confirm("Sign out of cloud backup?")) KHub.CloudAuth.signOut().then(function(){refresh();});
+      return;
+    }
+    KHub.CloudAuth.openDialog().then(function(result){
+      if(result==="reset-sent") alert("Password reset email sent.");
+      refresh();
+    }).catch(function(){});
+  }
+  btn.onclick=openAccount;
+  refresh();
+  KHub.CloudAuth.onChange(function(u){
+    refresh();
+    if(!u) return;
+    KHub.CloudBackup.restoreLatestIfNewer(APP_ID, KEYS, null, function(){ location.reload(); })
+      .finally(function(){
+        if(!autoSaveStarted){ autoSaveStarted=true; KHub.CloudBackup.autoSave(APP_ID, KEYS); }
+      });
+  });
+  window.nextDollarCloudSave=function(){ persistState(); return KHub.CloudBackup.save(APP_ID, KEYS); };
+  window.nextDollarCloudRestore=function(){ return KHub.CloudBackup.restore(APP_ID, KEYS, null, function(){ location.reload(); }); };
+}
+
+document.addEventListener('input', schedulePersist, true);
+document.addEventListener('change', schedulePersist, true);
+window.addEventListener('pagehide', persistState);
 
 // ── Language ────────────────────────────────────────────────────
 var lang = "en";
@@ -246,8 +356,7 @@ function cycleTheme(){ theme=TCYCLE[(TCYCLE.indexOf(theme)+1)%TCYCLE.length]; ap
 // ── Navigation ───────────────────────────────────────────────────
 var SCREENS = ["welcome","s1","s2","s3","s4","s5","s6","results"];
 
-function goTo(n){
-  document.querySelectorAll(".screen").forEach(function(s){s.classList.remove("active");});
+function goTo(n){`n  persistState();`n  document.querySelectorAll(".screen").forEach(function(s){s.classList.remove("active");});
   document.getElementById("screen-"+SCREENS[n]).classList.add("active");
   state.step = n;
   updateProgress(n);
@@ -277,8 +386,7 @@ function switchTab(tab){
   });
 }
 
-function restart(){
-  state = {takeHome:0,payFreq:"biweekly",housing:0,food:0,transport:0,utilities:0,funspend:0,
+function restart(){`n  localStorage.removeItem(NEXT_DOLLAR_STORAGE_KEY);`n  state = {takeHome:0,payFreq:"biweekly",housing:0,food:0,transport:0,utilities:0,funspend:0,
     debts:[],cash:0,efund:0,retirement:0,brokerage:0,hasMatch:false,matchPct:100,matchUpto:4,
     myContrib:0,hasRoth:false,retireAge:55,targetSpend:60000,personality:null,step:0};
   document.querySelectorAll("input[type=number]").forEach(function(i){i.value="";});
@@ -859,8 +967,7 @@ function initTilt(){
 }
 
 // ── Export / Import ──────────────────────────────────────────────
-function exportPlan(){
-  var payload={app:"next-dollar",version:"2.0",exported:new Date().toISOString(),lang:lang,state:state};
+function exportPlan(){`n  persistState();`n  var payload={app:"next-dollar",version:"2.0",exported:new Date().toISOString(),lang:lang,state:state};
   var blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
   var url=URL.createObjectURL(blob);
   var a=document.createElement("a");
@@ -921,12 +1028,10 @@ function esc(s){ return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;")
   metaTheme.name="theme-color";metaTheme.content="#06091A";
   document.head.appendChild(metaTheme);
 
-  applyTheme();
-  applyStrings();
+  loadPersistedPlan();`n  applyTheme();`n  applyStrings();
   // Init empty debt row
   state.debts=[newDebt()];
-  goTo(0);
-})();
+  applyStateToInputs();`n  setupCloudSync();`n  goTo(state.step || 0);`n})();
 
 window.addEventListener('error',function(e){
   console.error('[NextDollar] Uncaught:',e.error||e.message);
