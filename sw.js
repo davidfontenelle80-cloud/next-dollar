@@ -18,7 +18,7 @@
  * BUMP THIS VERSION STRING on every deploy that changes HTML, CSS, JS, manifest, or SW behavior.
  */
 
-const CACHE_VERSION = 'next-dollar-v12-cloud-auth-error-fix';
+const CACHE_VERSION = 'next-dollar-v13-google-cloud-auth';
 
 /**
  * All URLs that make up the app shell.
