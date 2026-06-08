@@ -18,7 +18,7 @@
  * BUMP THIS VERSION STRING on every deploy that changes HTML, CSS, JS, manifest, or SW behavior.
  */
 
-const CACHE_VERSION = 'next-dollar-v14-mobile-google-redirect';
+const CACHE_VERSION = 'next-dollar-v15-ministry-cloud-helper';
 
 /**
  * All URLs that make up the app shell.
