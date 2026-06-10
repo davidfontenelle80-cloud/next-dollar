@@ -31,7 +31,11 @@
   --text-dim:#404870;
   --radius:20px;
   --radius-sm:12px;
-  --radius-xs:8px;
+  --radius-xs:10px;
+  --radius-md:16px;
+  --radius-lg:22px;
+  --radius-xl:28px;
+  --radius-full:9999px;
   --shadow:0 8px 40px rgba(0,0,0,0.5);
   --shadow-sm:0 4px 20px rgba(0,0,0,0.35);
 

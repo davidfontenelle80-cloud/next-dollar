@@ -18,7 +18,7 @@
  * BUMP THIS VERSION STRING on every deploy that changes HTML, CSS, JS, manifest, or SW behavior.
  */
 
-const CACHE_VERSION = 'next-dollar-v18-specific-error-labels';
+const CACHE_VERSION = 'next-dollar-v19-house-finish-tokens';
 
 /**
  * All URLs that make up the app shell.
