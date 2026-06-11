@@ -37,8 +37,8 @@
     // ── Feature flags ─────────────────────────────────────
     // Set to true to activate. See individual module files for setup steps.
     features: {
-      auth:     true,   // -> js/auth.js
-      firebase: true,   // -> firebase/firebase-config.js
+      auth:     false,  // cloud backup removed Jun 2026
+      firebase: false,  // cloud backup removed Jun 2026
     },
 
     // ── Logging ───────────────────────────────────────────

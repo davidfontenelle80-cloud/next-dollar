@@ -18,7 +18,7 @@
  * BUMP THIS VERSION STRING on every deploy that changes HTML, CSS, JS, manifest, or SW behavior.
  */
 
-const CACHE_VERSION = 'next-dollar-v20-app-icons';
+const CACHE_VERSION = 'next-dollar-v21-sw-registered-no-cloud';
 
 /**
  * All URLs that make up the app shell.
@@ -33,6 +33,7 @@ const PRECACHE_URLS = [
   './css/components.css',
   './css/responsive.css',
   './js/config.js',
+  './js/sw-register.js',
   './js/i18n.js',
   './js/theme.js',
   './js/error-boundary.js',
@@ -43,8 +44,6 @@ const PRECACHE_URLS = [
   './js/components/input.js',
   './js/perf.js',
   './js/app.js',
-  './js/firebase/firebase-config.js',
-  './js/firebase/cloud-backup.js',
 ];
 
 // ── Install ──────────────────────────────────────────────────
