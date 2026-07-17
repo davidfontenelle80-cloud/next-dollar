@@ -18,7 +18,7 @@
  * BUMP THIS VERSION STRING on every deploy that changes HTML, CSS, JS, manifest, or SW behavior.
  */
 
-const CACHE_VERSION = 'next-dollar-v21-sw-registered-no-cloud';
+const CACHE_VERSION = 'next-dollar-v21-sw-registered-no-cloud-no-pinch-zoom';
 
 /**
  * All URLs that make up the app shell.
